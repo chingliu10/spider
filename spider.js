@@ -31,6 +31,43 @@ await new Promise(resolve => setTimeout(resolve, 2000));
   console.log('✨ Script completed! The browser will remain open.');
   console.log('⌛ Finding all <h2> elements...');
   // The $$() method returns an array of element handles.
+
+  
+// 👉 Click the Login button to open popup
+console.log('🔘 Clicking Login button...');
+const loginBtn = page.locator('button[type="button"]', { hasText: "Login" });
+await loginBtn.click();
+
+// 👉 Wait for the ID input to appear
+console.log('⌛ Waiting for login form...');
+await page.waitForSelector('input[title="ID"]');
+
+// 👉 Fill ID
+console.log('✍️ Typing ID...');
+await page.type('input[title="ID"]', '115832220');
+
+// 👉 Fill Password
+console.log('🔑 Typing Password...');
+await page.type('input[type="password"]', 'Tesha2020**');
+
+// 👉 Click the Login (submit) button inside popup
+console.log('🚀 Submitting login form...');
+await page.click('button[type="submit"]');
+
+// Wait for 10 seconds for the page to load
+console.log('⌛ Waiting for 10 seconds...');
+await new Promise(resolve => setTimeout(resolve, 30000));
+
+
+// ... (Your existing login code)
+
+// After you've successfully logged in and the new dashboard page is visible.
+console.log('⌛ Waiting for "Auction" button to appear...');
+// A more robust selector: find the parent div with 'cursor-pointer'
+// ... (Your existing login code)
+
+console.log('⌛ Waiting for "Auction" button to appear...');
+
   const h2Elements = await page.$$('h2');
 
   console.log(`✅ Found ${h2Elements.length} <h2> elements.`);
@@ -183,5 +220,69 @@ await new Promise(resolve => setTimeout(resolve, 2000));
       console.log('⚠️ No element found to click.');
     }
   }
+
+
+
+  // Wait for the page to load (you can adjust the selector or timeout as needed)
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+  // Get all buttons on the page
+  const allButtons = await page.$$('button');
+
+  // Log the text content of each button
+  console.log(`🔎 Found ${allButtons.length} buttons on the page:`);
+  for (let i = 0; i < allButtons.length; i++) {
+    const btnText = await page.evaluate(el => el.textContent.trim(), allButtons[i]);
+    console.log(`Button ${i + 1}: "${btnText}"`);
+  }
+
+  for (let i = 0; i < allButtons.length; i++) {
+    const btnText = await page.evaluate(el => el.textContent.trim(), allButtons[i]);
+    if (btnText === "·Cart") {
+      await allButtons[i].click();
+      console.log(`🖱️ Clicked Button ${i + 1}: "${btnText}"`);
+      break; // Stop after clicking the desired button
+    }
+  }
+
+
+  //i want you to get the whole uRL OF THE CURRENT PAGE AND SAVE IT TO A TEXT FILE CALLED current_url.txt
+  const currentURL = page.url();
+  await fs.writeFile('current_url.txt', currentURL);
+  console.log(`💾 Current URL saved to current_url.txt: ${currentURL}`);
+
+  //find all divs with class "page-header"
+  const pageHeaderDivs = await page.$$('div.page-header');
+  console.log(`🔎 Found ${pageHeaderDivs.length} divs with class "page-header".`);
+
+//after page header is found get the next element after pageheader then within
+//within that element they are buttons with text called "place bid"
+//get all buttons and print there html
+  if (pageHeaderDivs.length > 0) {
+    const nextElementHtml = await page.evaluate(el => el.nextElementSibling ? el.nextElementSibling.outerHTML : null, pageHeaderDivs[0]);
+    console.log('-----------------------------------');
+    console.log('🚀 Next Sibling of First .page-header HTML:');
+    console.log(nextElementHtml);
+    console.log('-----------------------------------');
+  }
+  const pageHeader = pageHeaderDivs[0];
+  if (pageHeader) {
+    const nextSibling = await page.evaluateHandle(el => el.nextElementSibling, pageHeader);
+    if (nextSibling) {
+      const buttons = await nextSibling.$$('button');
+      console.log(`🔎 Found ${buttons.length} buttons after .page-header:`);
+      for (let i = 0; i < buttons.length; i++) {
+        const btnClass = await page.evaluate(el => el.className, buttons[i]);
+        if (btnClass.includes('hidden')) continue; // Skip hidden buttons
+        const btnText = await page.evaluate(el => el.textContent.trim(), buttons[i]);
+        if (btnText === "Place bid") {
+          const btnHtml = await page.evaluate(el => el.outerHTML, buttons[i]);
+          console.log(`Button ${i + 1} HTML: ${btnHtml}`);
+        }
+      }
+    }
+  }
+  
+
 
   console.log('✨ Script completed! The browser will remain open.');
