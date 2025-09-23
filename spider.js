@@ -275,7 +275,7 @@ console.log('⌛ Waiting for "Auction" button to appear...');
         const btnClass = await page.evaluate(el => el.className, buttons[i]);
         if (btnClass.includes('hidden')) continue; // Skip hidden buttons
         const btnText = await page.evaluate(el => el.textContent.trim(), buttons[i]);
-        if (btnText === "Place bid") {
+        if (btnText === "Place Bid") {
           const btnHtml = await page.evaluate(el => el.outerHTML, buttons[i]);
           console.log(`Button ${i + 1} HTML: ${btnHtml}`);
         }
@@ -283,6 +283,47 @@ console.log('⌛ Waiting for "Auction" button to appear...');
     }
   }
   
+const products = [];
+const username = '115832220';
+const password = 'Tesha2020**';
+const url = page.url();
+
+if (pageHeader) {
+  const nextSibling = await page.evaluateHandle(el => el.nextElementSibling, pageHeader);
+  if (nextSibling) {
+    const buttons = await nextSibling.$$('button');
+    let productCount = 1;
+    for (let i = 0; i < buttons.length; i++) {
+      const btnClass = await page.evaluate(el => el.className, buttons[i]);
+      if (btnClass.includes('hidden')) continue; // Skip hidden buttons
+      const btnText = await page.evaluate(el => el.textContent.trim(), buttons[i]);
+      if (btnText === "Place Bid") {
+        const btnBox = await page.evaluate(el => {
+          const rect = el.getBoundingClientRect();
+          return { x: rect.x, y: rect.y };
+        }, buttons[i]);
+        products.push({
+          [`product${productCount}`]: {
+            x: btnBox.x,
+            y: btnBox.y
+          }
+        });
+        productCount++;
+      }
+    }
+  }
+}
+
+// Save to products.json
+const output = {
+  url,
+  username,
+  password,
+  products
+};
+
+await fs.writeFile('products.json', JSON.stringify(output, null, 2));
+console.log('💾 Saved product positions to products.json');
 
 
   console.log('✨ Script completed! The browser will remain open.');
