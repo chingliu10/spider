@@ -1,73 +1,75 @@
 import puppeteer from 'puppeteer';
 
-
 // Add "type": "module" to your package.json file to use this syntax.
 import fs from 'fs/promises';
 
-const browser = await puppeteer.launch({
-  headless: false,        // Show browser
-  slowMo: 1000,           // Slow down actions (1s per step)
-  devtools: false,         // Open DevTools automatically
-  defaultViewport: null,  // Use full screen
-  args: [
-    '--start-maximized',
-    '--disable-web-security',
-    '--disable-features=VizDisplayCompositor'
-  ]
-});
+(async () => { 
+  const browser = await puppeteer.launch({
+    headless: false,        // Show browser
+    slowMo: 1000,           // Slow down actions (1s per step)
+    devtools: false,        // Open DevTools automatically
+    defaultViewport: null,  // Use full screen
+    args: [
+      '--start-maximized',
+      '--disable-web-security',
+      '--disable-features=VizDisplayCompositor'
+    ]
+  });
 
-const page = await browser.newPage();
+  const page = await browser.newPage();
 
-console.log('🌐 Navigating to TRA website...');
-await page.goto('https://tanesw.tra.go.tz/', {
-  waitUntil: 'networkidle2'
-});
+  console.log('🌐 Navigating to TRA website...');
+  await page.goto('https://tanesw.tra.go.tz/', { waitUntil: 'networkidle0' }); // ✅ wait until fully loaded
 
-console.log('📱 Setting viewport size...');
-await page.setViewport({ width: 1366, height: 768 });
+  console.log('📱 Setting viewport size...');
+  await page.setViewport({ width: 1366, height: 768 });
 
-await new Promise(resolve => setTimeout(resolve, 2000));
+  await new Promise(resolve => setTimeout(resolve, 2000));
 
   console.log('✨ Script completed! The browser will remain open.');
   console.log('⌛ Finding all <h2> elements...');
-  // The $$() method returns an array of element handles.
 
-  
-// 👉 Click the Login button to open popup
-console.log('🔘 Clicking Login button...');
-const loginBtn = page.locator('button[type="button"]', { hasText: "Login" });
-await loginBtn.click();
+  // 👉 Click the Login button to open popup
+  console.log('🔘 Clicking Login button...');
+ // Go to TRA site and wait for full load
+await page.goto('https://tanesw.tra.go.tz/', { waitUntil: 'networkidle0' });
 
-// 👉 Wait for the ID input to appear
-console.log('⌛ Waiting for login form...');
-await page.waitForSelector('input[title="ID"]');
+// Wait for the Login button to be visible
+await page.waitForSelector('button[type="button"]', { visible: true });
 
-// 👉 Fill ID
+// Click the Login button
+await page.click('button[type="button"]');
+
+
+  // 👉 Wait for the ID input to appear
+  console.log('⌛ Waiting for login form...');
+  await page.waitForSelector('input[title="ID"]', { visible: true }); // ✅ wait for input
+
+  // 👉 Fill ID
+  console.log('✍️ Typing ID...');
+ // 👉 Fill ID (Pasting the content)
+// 👉 Fill ID (Slightly slower but more reliable)
 console.log('✍️ Typing ID...');
-await page.type('input[title="ID"]', '115832220');
+await page.focus('input[title="ID"]');
+await page.keyboard.type('168733283');
 
 // 👉 Fill Password
 console.log('🔑 Typing Password...');
-await page.type('input[type="password"]', 'Tesha2020**');
+await page.focus('input[type="password"]');
+await page.keyboard.type('Jesusmy01@');
 
-// 👉 Click the Login (submit) button inside popup
-console.log('🚀 Submitting login form...');
-await page.click('button[type="submit"]');
+  // 👉 Click the Login (submit) button inside popup
+  console.log('🚀 Submitting login form...');
+  await page.waitForSelector('button[type="submit"]', { visible: true }); // ✅ wait for submit button
+  await page.click('button[type="submit"]');
 
-// Wait for 10 seconds for the page to load
-console.log('⌛ Waiting for 10 seconds...');
-await new Promise(resolve => setTimeout(resolve, 30000));
+  // Wait for 30 seconds for the page to load
+  console.log('⌛ Waiting for 30 seconds...');
+  await new Promise(resolve => setTimeout(resolve, 30000));
 
+  // ... (Your existing login code continues unchanged)
 
-// ... (Your existing login code)
-
-// After you've successfully logged in and the new dashboard page is visible.
-console.log('⌛ Waiting for "Auction" button to appear...');
-// A more robust selector: find the parent div with 'cursor-pointer'
-// ... (Your existing login code)
-
-console.log('⌛ Waiting for "Auction" button to appear...');
-
+  console.log('⌛ Waiting for "Auction" button to appear...');
   const h2Elements = await page.$$('h2');
 
   console.log(`✅ Found ${h2Elements.length} <h2> elements.`);
@@ -75,7 +77,6 @@ console.log('⌛ Waiting for "Auction" button to appear...');
   if (h2Elements.length > 2) {
     const h2 = h2Elements[2]; // third element (index 2)
 
-    // Get parent element's outer HTML
     const parentHtml = await page.evaluate(el => el.parentElement.outerHTML, h2);
 
     console.log('-----------------------------------');
@@ -83,7 +84,6 @@ console.log('⌛ Waiting for "Auction" button to appear...');
     console.log(parentHtml);
     console.log('-----------------------------------');
 
-    // Get parent's next sibling outer HTML
     const nextSiblingHtml = await page.evaluate(el => el.parentElement.nextElementSibling?.outerHTML, h2);
 
     console.log('-----------------------------------');
@@ -91,7 +91,6 @@ console.log('⌛ Waiting for "Auction" button to appear...');
     console.log(nextSiblingHtml);
     console.log('-----------------------------------');
 
-    // Get the first child element inside parent's next sibling
     const firstChildHtml = await page.evaluate(el => {
       const nextSibling = el.parentElement.nextElementSibling;
       return nextSibling && nextSibling.firstElementChild
@@ -104,7 +103,6 @@ console.log('⌛ Waiting for "Auction" button to appear...');
     console.log(firstChildHtml);
     console.log('-----------------------------------');
 
-    // Go inside again: get the first child of the first child
     const deepChildHtml = await page.evaluate(el => {
       const nextSibling = el.parentElement.nextElementSibling;
       const firstChild = nextSibling && nextSibling.firstElementChild;
@@ -118,7 +116,6 @@ console.log('⌛ Waiting for "Auction" button to appear...');
     console.log(deepChildHtml);
     console.log('-----------------------------------');
 
-    // Go even deeper: get the first child of the deep child
     const deeperChildHtml = await page.evaluate(el => {
       const nextSibling = el.parentElement.nextElementSibling;
       const firstChild = nextSibling && nextSibling.firstElementChild;
@@ -159,7 +156,6 @@ console.log('⌛ Waiting for "Auction" button to appear...');
       const centerX = deeperChildBox.x + deeperChildBox.width / 2;
       const centerY = deeperChildBox.y + deeperChildBox.height / 2;
 
-      // Scroll to the deeper child element
       await page.evaluate(el => {
         const nextSibling = el.parentElement.nextElementSibling;
         const firstChild = nextSibling && nextSibling.firstElementChild;
@@ -172,10 +168,8 @@ console.log('⌛ Waiting for "Auction" button to appear...');
 
       console.log('🖱️ Scrolled to center of deeper child element.');
 
-      // Wait a moment for scroll animation
       await new Promise(resolve => setTimeout(resolve, 1000));
 
-      // Get info about the element to be clicked
       const clickedElementInfo = await page.evaluate(el => {
         const nextSibling = el.parentElement.nextElementSibling;
         const firstChild = nextSibling && nextSibling.firstElementChild;
@@ -191,7 +185,6 @@ console.log('⌛ Waiting for "Auction" button to appear...');
         return null;
       }, h2);
 
-      // Click at the center of the deeper child element
       await page.mouse.click(centerX, centerY);
 
       if (clickedElementInfo) {
@@ -203,7 +196,6 @@ console.log('⌛ Waiting for "Auction" button to appear...');
       }
     }
 
-    // Get the deeper child element handle
     const elementHandle = await page.evaluateHandle(el => {
       const nextSibling = el.parentElement.nextElementSibling;
       const firstChild = nextSibling && nextSibling.firstElementChild;
@@ -213,7 +205,7 @@ console.log('⌛ Waiting for "Auction" button to appear...');
 
     if (elementHandle) {
       await elementHandle.asElement().scrollIntoViewIfNeeded();
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise(resolve => setTimeout(resolve, 2000));
       await elementHandle.asElement().click();
       console.log('🖱️ Clicked using element handle.');
     } else {
@@ -221,15 +213,10 @@ console.log('⌛ Waiting for "Auction" button to appear...');
     }
   }
 
+  await new Promise(resolve => setTimeout(resolve, 2000));
 
-
-  // Wait for the page to load (you can adjust the selector or timeout as needed)
-    await new Promise(resolve => setTimeout(resolve, 2000));
-
-  // Get all buttons on the page
   const allButtons = await page.$$('button');
 
-  // Log the text content of each button
   console.log(`🔎 Found ${allButtons.length} buttons on the page:`);
   for (let i = 0; i < allButtons.length; i++) {
     const btnText = await page.evaluate(el => el.textContent.trim(), allButtons[i]);
@@ -241,23 +228,17 @@ console.log('⌛ Waiting for "Auction" button to appear...');
     if (btnText === "·Cart") {
       await allButtons[i].click();
       console.log(`🖱️ Clicked Button ${i + 1}: "${btnText}"`);
-      break; // Stop after clicking the desired button
+      break;
     }
   }
 
-
-  //i want you to get the whole uRL OF THE CURRENT PAGE AND SAVE IT TO A TEXT FILE CALLED current_url.txt
   const currentURL = page.url();
   await fs.writeFile('current_url.txt', currentURL);
   console.log(`💾 Current URL saved to current_url.txt: ${currentURL}`);
 
-  //find all divs with class "page-header"
   const pageHeaderDivs = await page.$$('div.page-header');
   console.log(`🔎 Found ${pageHeaderDivs.length} divs with class "page-header".`);
 
-//after page header is found get the next element after pageheader then within
-//within that element they are buttons with text called "place bid"
-//get all buttons and print there html
   if (pageHeaderDivs.length > 0) {
     const nextElementHtml = await page.evaluate(el => el.nextElementSibling ? el.nextElementSibling.outerHTML : null, pageHeaderDivs[0]);
     console.log('-----------------------------------');
@@ -273,7 +254,7 @@ console.log('⌛ Waiting for "Auction" button to appear...');
       console.log(`🔎 Found ${buttons.length} buttons after .page-header:`);
       for (let i = 0; i < buttons.length; i++) {
         const btnClass = await page.evaluate(el => el.className, buttons[i]);
-        if (btnClass.includes('hidden')) continue; // Skip hidden buttons
+        if (btnClass.includes('hidden')) continue;
         const btnText = await page.evaluate(el => el.textContent.trim(), buttons[i]);
         if (btnText === "Place Bid") {
           const btnHtml = await page.evaluate(el => el.outerHTML, buttons[i]);
@@ -282,48 +263,78 @@ console.log('⌛ Waiting for "Auction" button to appear...');
       }
     }
   }
-  
-const products = [];
-const username = '115832220';
-const password = 'Tesha2020**';
-const url = page.url();
 
-if (pageHeader) {
-  const nextSibling = await page.evaluateHandle(el => el.nextElementSibling, pageHeader);
-  if (nextSibling) {
-    const buttons = await nextSibling.$$('button');
-    let productCount = 1;
-    for (let i = 0; i < buttons.length; i++) {
-      const btnClass = await page.evaluate(el => el.className, buttons[i]);
-      if (btnClass.includes('hidden')) continue; // Skip hidden buttons
-      const btnText = await page.evaluate(el => el.textContent.trim(), buttons[i]);
-      if (btnText === "Place Bid") {
-        const btnBox = await page.evaluate(el => {
-          const rect = el.getBoundingClientRect();
-          return { x: rect.x, y: rect.y };
-        }, buttons[i]);
-        products.push({
-          [`product${productCount}`]: {
-            x: btnBox.x,
-            y: btnBox.y
-          }
-        });
-        productCount++;
+  if (pageHeader) {
+    const nextSibling = await page.evaluateHandle(el => el.nextElementSibling, pageHeader);
+    const placeBidButtons = await nextSibling.$$('button:not(.hidden)');
+    const visiblePlaceBidButtons = [];
+    for (const button of placeBidButtons) {
+      const text = await button.evaluate(el => el.textContent.trim());
+      if (text === "Place Bid") {
+        visiblePlaceBidButtons.push(button);
+      }
+    }
+
+    if (visiblePlaceBidButtons.length > 0) {
+      const randomIndex = Math.floor(Math.random() * visiblePlaceBidButtons.length);
+      console.log(`🖱️ Randomly clicking "Place Bid" button at index ${randomIndex}...`);
+      await visiblePlaceBidButtons[randomIndex].click();
+      await new Promise(resolve => setTimeout(resolve, 5000));
+    }
+  }
+  
+  console.log('📍 Scrolling to top for consistent coordinates...');
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await new Promise(resolve => setTimeout(resolve, 2000));
+
+  const products = [];
+  const username = '115832220';
+  const password = 'Tesha2020**';
+  const url = page.url();
+
+  if (pageHeader) {
+    const nextSibling = await page.evaluateHandle(el => el.nextElementSibling, pageHeader);
+    if (nextSibling) {
+      const buttons = await nextSibling.$$('button');
+      let productCount = 1;
+      for (let i = 0; i < buttons.length; i++) {
+        const btnClass = await page.evaluate(el => el.className, buttons[i]);
+        if (btnClass.includes('hidden')) continue;
+        const btnText = await page.evaluate(el => el.textContent.trim(), buttons[i]);
+        if (btnText === "Place Bid") {
+          const btnBox = await page.evaluate(el => {
+            const rect = el.getBoundingClientRect();
+            return { 
+              x: rect.x + window.pageXOffset,
+              y: rect.y + window.pageYOffset
+            };
+          }, buttons[i]);
+          products.push({
+            [`product${productCount}`]: {
+              x: btnBox.x,
+              y: btnBox.y
+            }
+          });
+          productCount++;
+        }
       }
     }
   }
-}
 
-// Save to products.json
-const output = {
-  url,
-  username,
-  password,
-  products
-};
+  const output = {
+    url,
+    username,
+    password,
+    products
+  };
 
-await fs.writeFile('products.json', JSON.stringify(output, null, 2));
-console.log('💾 Saved product positions to products.json');
+  console.log("output*********************")
+  console.log(output)
+  console.log("output*********************")
+  await fs.writeFile('products.json', JSON.stringify(output, null, 2));
+  console.log('💾 Saved product positions to products.json');
 
+  await browser.close();
+  console.log('✨ Script completed! The browser has been closed.');
 
-  console.log('✨ Script completed! The browser will remain open.');
+})();
