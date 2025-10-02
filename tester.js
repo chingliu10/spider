@@ -7,8 +7,8 @@ import fs from 'fs/promises';
     // -----------------------------------------------------------------
     
     // --- NEW TARGET TIME: 1:42 PM EAT (13:42:00) ---
-    const TARGET_HOUR = 13;      
-    const TARGET_MINUTE = 40;     
+    const TARGET_HOUR = 19;      
+    const TARGET_MINUTE = 54;     
     const TARGET_SECOND = 0;     
 
     // LATENCY ADJUSTMENT (To account for 1-4ms execution time)
@@ -90,199 +90,151 @@ import fs from 'fs/promises';
     // -----------------------------------------------------------------
     // 🎯 DYNAMIC MAPPING AND QUICK BID FUNCTION
     // -----------------------------------------------------------------
-    // const mapButtonsAndExecute = async (isFinalExecution = false) => {
+    const mapButtonsAndExecute = async (isFinalExecution = false) => {
         
-    //     // --- 1. Navigate to the product page ---
-    //     console.log(`🌐 Navigating to product URL: ${url}`);
-    //     // Reverted to your original 'networkidle2' wait (as in the code you provided)
-    //     const navigationWait = isFinalExecution ? 'networkidle2' : 'networkidle2';
-    //     await page.goto(url, { waitUntil: navigationWait }); 
+        // --- 1. Navigate to the product page ---
+        console.log(`🌐 Navigating to product URL: ${url}`);
+        // Reverted to your original 'networkidle2' wait (as in the code you provided)
+        const navigationWait = isFinalExecution ? 'networkidle2' : 'networkidle2';
+        await page.goto(url, { waitUntil: navigationWait }); 
         
-    //     // Wait specifically for the "Place Bid" button to be visible
-    //     let bidButtonElement;
-    //     try {
-    //         console.log('⌛ Waiting for "Place Bid" button to appear...');
-    //         // This retrieves the element handle for the mapping/initial stage
-    //         bidButtonElement = await page.waitForSelector(PLACE_BID_SELECTOR, { visible: true, timeout: 15000 }); 
-    //         console.log('✅ "Place Bid" button found.');
-    //     } catch (e) {
-    //         console.error('⚠️ Timeout waiting for "Place Bid" button:', e.message);
-    //         return false;
-    //     }
+        // Wait specifically for the "Place Bid" button to be visible
+        let bidButtonElement;
+        try {
+            console.log('⌛ Waiting for "Place Bid" button to appear...');
+            // This retrieves the element handle for the mapping/initial stage
+            bidButtonElement = await page.waitForSelector(PLACE_BID_SELECTOR, { visible: true, timeout: 15000 }); 
+            console.log('✅ "Place Bid" button found.');
+        } catch (e) {
+            console.error('⚠️ Timeout waiting for "Place Bid" button:', e.message);
+            return false;
+        }
 
-    //     // Get initial coordinates from JSON (used for scrolling)
-    //     const firstProduct = products.products[0];
-    //     const coords = Object.values(firstProduct)[0];
-    //     const btnX = coords.x;
-    //     const btnY = coords.y;
+        // Get initial coordinates from JSON (used for scrolling)
+        const firstProduct = products.products[0];
+        const coords = Object.values(firstProduct)[0];
+        const btnX = coords.x;
+        const btnY = coords.y;
 
-    //     // Scroll to the area 
-    //     await page.evaluate((docX, docY) => {
-    //         window.scrollTo(docX - window.innerWidth/2, docY - window.innerHeight/2);
-    //     }, btnX, btnY);
-    //     await new Promise(resolve => setTimeout(resolve, 500));
+        // Scroll to the area 
+        await page.evaluate((docX, docY) => {
+            window.scrollTo(docX - window.innerWidth/2, docY - window.innerHeight/2);
+        }, btnX, btnY);
+        await new Promise(resolve => setTimeout(resolve, 500));
 
-    //     // Get coordinates for mapping logic (only needed for the mouse click in the mapping section)
-    //     const placeBidButtonCoords = await page.evaluate((targetX, targetY) => {
-    //         const allButtons = document.querySelectorAll('button');
-    //         for (const button of allButtons) {
-    //             if (button.textContent.trim() === "Place Bid") {
-    //                 const rect = button.getBoundingClientRect();
-    //                 return { 
-    //                     x: rect.x + window.pageXOffset + rect.width / 2, 
-    //                     y: rect.y + window.pageYOffset + rect.height / 2, 
-    //                     found: true 
-    //                 };
-    //             }
-    //         }
-    //         return null;
-    //     }, btnX, btnY);
+        // Get coordinates for mapping logic (only needed for the mouse click in the mapping section)
+        const placeBidButtonCoords = await page.evaluate((targetX, targetY) => {
+            const allButtons = document.querySelectorAll('button');
+            for (const button of allButtons) {
+                if (button.textContent.trim() === "Place Bid") {
+                    const rect = button.getBoundingClientRect();
+                    return { 
+                        x: rect.x + window.pageXOffset + rect.width / 2, 
+                        y: rect.y + window.pageYOffset + rect.height / 2, 
+                        found: true 
+                    };
+                }
+            }
+            return null;
+        }, btnX, btnY);
         
-    //     if (!placeBidButtonCoords || !placeBidButtonCoords.found) {
-    //         console.error('⚠️ Could not find "Place Bid" button after scrolling. Cannot proceed.');
-    //         return false;
-    //     }
+        if (!placeBidButtonCoords || !placeBidButtonCoords.found) {
+            console.error('⚠️ Could not find "Place Bid" button after scrolling. Cannot proceed.');
+            return false;
+        }
 
-    //     if (isFinalExecution) {
-    //         console.log('\n*** 🚀 FINAL EXECUTION SEQUENCE STARTING NOW ***');
+        if (isFinalExecution) {
+            console.log('\n*** 🚀 FINAL EXECUTION SEQUENCE STARTING NOW ***');
             
-    //         // --- STEP 1: Click "Place Bid" using the RELIABLE ELEMENT CLICK ---
-    //         console.log(`1. Clicking "Place Bid" using element.click() for maximum reliability...`);
+            // --- STEP 1: Click "Place Bid" using the RELIABLE ELEMENT CLICK ---
+            console.log(`1. Clicking "Place Bid" using element.click() for maximum reliability...`);
             
-    //         // 🛑 FIX: Re-fetch the element immediately before the click to ensure it's not stale 
-    //         const finalBidButtonElement = await page.waitForSelector(PLACE_BID_SELECTOR, { visible: true, timeout: 5000 });
-    //         await finalBidButtonElement.click(); 
+            // 🛑 FIX: Re-fetch the element immediately before the click to ensure it's not stale 
+            const finalBidButtonElement = await page.waitForSelector(PLACE_BID_SELECTOR, { visible: true, timeout: 5000 });
+            await finalBidButtonElement.click(); 
             
-    //         // Wait for the bid input modal to appear 
-    //         console.log('⌛ Waiting for bid input field (Timeout 10s)...');
-    //         // Reverted to 10s timeout
-    //         await page.waitForSelector('input[name="bidVal"]', { visible: true, timeout: 10000 }); 
+            // Wait for the bid input modal to appear 
+            console.log('⌛ Waiting for bid input field (Timeout 10s)...');
+            // Reverted to 10s timeout
+            await page.waitForSelector('input[name="bidVal"]', { visible: true, timeout: 10000 }); 
             
-    //         // --- STEP 2: Fill the Bid Input (FAST: delay: 0) ---
-    //         console.log(`2. Entering bid amount: ${BID_VALUE} (Delay: 0ms)`);
-    //         await page.type('input[name="bidVal"]', BID_VALUE, { delay: 0 });
+            // --- STEP 2: Fill the Bid Input (FAST: delay: 0) ---
+            console.log(`2. Entering bid amount: ${BID_VALUE} (Delay: 0ms)`);
+            await page.type('input[name="bidVal"]', BID_VALUE, { delay: 0 });
 
-    //         if (!KNOWN_SUBMIT_X) {
-    //             console.error('FATAL: Submit coordinates were lost or not mapped. Aborting bid.');
-    //             return false;
-    //         }
+            if (!KNOWN_SUBMIT_X) {
+                console.error('FATAL: Submit coordinates were lost or not mapped. Aborting bid.');
+                return false;
+            }
 
-    //         // --- STEP 3: Click "Submit" using KNOWN coordinates (FAST) ---
-    //         console.log(`3. Clicking Submit at (${KNOWN_SUBMIT_X.toFixed(2)}, ${KNOWN_SUBMIT_Y.toFixed(2)})`);
-    //         await page.mouse.click(KNOWN_SUBMIT_X, KNOWN_SUBMIT_Y);
+            // --- STEP 3: Click "Submit" using KNOWN coordinates (FAST) ---
+            console.log(`3. Clicking Submit at (${KNOWN_SUBMIT_X.toFixed(2)}, ${KNOWN_SUBMIT_Y.toFixed(2)})`);
+            await page.mouse.click(KNOWN_SUBMIT_X, KNOWN_SUBMIT_Y);
             
-    //         await new Promise(resolve => setTimeout(resolve, 300));
+            await new Promise(resolve => setTimeout(resolve, 300));
 
-    //         // --- STEP 4: Click "OK" using KNOWN coordinates (FAST) ---
-    //         console.log(`4. 🔥 Clicking OK at (${KNOWN_OK_X.toFixed(2)}, ${KNOWN_OK_Y.toFixed(2)})`);
-    //         await page.mouse.click(KNOWN_OK_X, KNOWN_OK_Y);
+            // --- STEP 4: Click "OK" using KNOWN coordinates (FAST) ---
+            console.log(`4. 🔥 Clicking OK at (${KNOWN_OK_X.toFixed(2)}, ${KNOWN_OK_Y.toFixed(2)})`);
+            await page.mouse.click(KNOWN_OK_X, KNOWN_OK_Y);
             
-    //         console.log('\n🎉 QUICK BID SEQUENCE COMPLETED!');
-    //         return true;
-    //     } 
+            console.log('\n🎉 QUICK BID SEQUENCE COMPLETED!');
+            return true;
+        } 
         
-    //     // --- Mapping Logic (Only runs if coordinates haven't been successfully stored yet) ---
-    //     if (KNOWN_SUBMIT_X === null) {
-    //         console.log('Mapping Submit and OK buttons for the first time...');
-            
-    //         // Click Place Bid to open the modal and map buttons (Uses coordinates here for consistency in mapping)
-    //         await page.mouse.click(placeBidButtonCoords.x, placeBidButtonCoords.y);
-    //         await new Promise(resolve => setTimeout(resolve, SHORT_PAUSE_MS)); 
-
-    //         // Find Submit Button 
-    //         let submitBox = await page.evaluate(() => {
-    //             const btn = Array.from(document.querySelectorAll('button')).find(b => b.textContent.trim().toLowerCase() === 'submit');
-    //             if (btn) {
-    //                 const rect = btn.getBoundingClientRect();
-    //                 return { x: rect.x + window.pageXOffset + rect.width / 2, y: rect.y + window.pageYOffset + rect.height / 2 };
-    //             }
-    //             return null;
-    //         });
-            
-    //         if (submitBox) {
-    //             // Click submit to reveal OK
-    //             await page.mouse.click(submitBox.x, submitBox.y);
-    //             await new Promise(resolve => setTimeout(resolve, 500)); 
-
-    //             // Find OK Button
-    //             let okBox = await page.evaluate(() => {
-    //                 const btn = Array.from(document.querySelectorAll('button')).find(b => b.textContent.trim() === 'OK');
-    //                 if (btn) {
-    //                     const rect = btn.getBoundingClientRect();
-    //                     return { x: rect.x + window.pageXOffset + rect.width / 2, y: rect.y + window.pageYOffset + rect.height / 2 };
-    //                 }
-    //                 return null;
-    //             });
-                
-    //             if (okBox) {
-    //                 // STORE GLOBAL COORDINATES
-    //                 KNOWN_SUBMIT_X = submitBox.x;
-    //                 KNOWN_SUBMIT_Y = submitBox.y;
-    //                 KNOWN_OK_X = okBox.x;
-    //                 KNOWN_OK_Y = okBox.y;
-
-    //                 await page.mouse.click(okBox.x, okBox.y); // Click OK to close the test modal
-    //                 console.log('✅ Successfully mapped ALL critical button coordinates.');
-    //             } else {
-    //                 console.error('⚠️ Could not find OK button.');
-    //             }
-    //         } else {
-    //              console.error('⚠️ Could not find Submit button.');
-    //         }
-    //     }
         
-    //     return true;
-    // };
+        
+        return true;
+    };
     
     // -----------------------------------------------------------------
     // ⏰ TIMED RELOAD AND EXECUTION LOOP
     // -----------------------------------------------------------------
     
-    // console.log(`\n⏳ Target Bid Time (Adjusted for latency): ${new Date(TARGET_BID_TIME_MS).toLocaleTimeString()} (${TARGET_BID_TIME_MS})`);
+    console.log(`\n⏳ Target Bid Time (Adjusted for latency): ${new Date(TARGET_BID_TIME_MS).toLocaleTimeString()} (${TARGET_BID_TIME_MS})`);
     
-    // let timeRemainingMs = TARGET_BID_TIME_MS - Date.now();
-    // let initialMapDone = false;
+    let timeRemainingMs = TARGET_BID_TIME_MS - Date.now();
+    let initialMapDone = false;
     
-    // while (timeRemainingMs > FINAL_RUN_THRESHOLD_MS) {
+    while (timeRemainingMs > FINAL_RUN_THRESHOLD_MS) {
         
-    //     if (!initialMapDone || timeRemainingMs < RELOAD_THRESHOLD_MS) {
+        if (!initialMapDone || timeRemainingMs < RELOAD_THRESHOLD_MS) {
             
-    //         console.log(`[${new Date().toLocaleTimeString()}] ♻️ Time remaining: ${Math.ceil(timeRemainingMs / 1000)}s. ${initialMapDone ? "RELOADING PAGE..." : "INITIAL NAVIGATION & MAPPING..."}`);
+            console.log(`[${new Date().toLocaleTimeString()}] ♻️ Time remaining: ${Math.ceil(timeRemainingMs / 1000)}s. ${initialMapDone ? "RELOADING PAGE..." : "INITIAL NAVIGATION & MAPPING..."}`);
             
-    //         const success = await mapButtonsAndExecute(false);
+            const success = await mapButtonsAndExecute(false);
             
-    //         if (!success) {
-    //             console.error('Critical failure during mapping/navigation. Aborting.');
-    //             await browser.close();
-    //             return;
-    //         }
-    //         initialMapDone = true;
+            if (!success) {
+                console.error('Critical failure during mapping/navigation. Aborting.');
+                await browser.close();
+                return;
+            }
+            initialMapDone = true;
             
-    //         if (timeRemainingMs > RELOAD_THRESHOLD_MS) {
-    //             console.log(`[${new Date().toLocaleTimeString()}] 🕰️ Done mapping. Waiting ${RELOAD_PAUSE_MS / 1000}s...`);
-    //             await new Promise(resolve => setTimeout(resolve, RELOAD_PAUSE_MS));
-    //         } else {
-    //             await new Promise(resolve => setTimeout(resolve, SHORT_PAUSE_MS));
-    //         }
+            if (timeRemainingMs > RELOAD_THRESHOLD_MS) {
+                console.log(`[${new Date().toLocaleTimeString()}] 🕰️ Done mapping. Waiting ${RELOAD_PAUSE_MS / 1000}s...`);
+                await new Promise(resolve => setTimeout(resolve, RELOAD_PAUSE_MS));
+            } else {
+                await new Promise(resolve => setTimeout(resolve, SHORT_PAUSE_MS));
+            }
             
-    //     } else {
-    //         console.log(`[${new Date().toLocaleTimeString()}] 🕰️ Time remaining: ${Math.ceil(timeRemainingMs / 60000)} min. Waiting ${RELOAD_PAUSE_MS / 1000}s...`);
-    //         await new Promise(resolve => setTimeout(resolve, RELOAD_PAUSE_MS));
-    //     }
+        } else {
+            console.log(`[${new Date().toLocaleTimeString()}] 🕰️ Time remaining: ${Math.ceil(timeRemainingMs / 60000)} min. Waiting ${RELOAD_PAUSE_MS / 1000}s...`);
+            await new Promise(resolve => setTimeout(resolve, RELOAD_PAUSE_MS));
+        }
         
-    //     timeRemainingMs = TARGET_BID_TIME_MS - Date.now();
-    // }
+        timeRemainingMs = TARGET_BID_TIME_MS - Date.now();
+    }
     
-    // -----------------------------------------------------------------
+   // -----------------------------------------------------------------
     // ⚡️ FINAL EXECUTION (Less than 6 seconds remaining)
     // -----------------------------------------------------------------
     
-    // const finalWaitTime = Math.max(0, TARGET_BID_TIME_MS - Date.now()); 
+    const finalWaitTime = Math.max(0, TARGET_BID_TIME_MS - Date.now()); 
     
-    // if (finalWaitTime > 0) {
-    //     console.log(`[${new Date().toLocaleTimeString()}] ⚡️ FINAL WAIT: Waiting ${finalWaitTime}ms for precise execution...`);
-    //     await new Promise(resolve => setTimeout(resolve, finalWaitTime));
-    // }
+    if (finalWaitTime > 0) {
+        console.log(`[${new Date().toLocaleTimeString()}] ⚡️ FINAL WAIT: Waiting ${finalWaitTime}ms for precise execution...`);
+        await new Promise(resolve => setTimeout(resolve, finalWaitTime));
+    }
     
     // Execute the final bid sequence
     await mapButtonsAndExecute(true);
