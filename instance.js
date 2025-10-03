@@ -7,12 +7,15 @@ import fs from 'fs/promises';
     // -----------------------------------------------------------------
     
     // --- NEW TARGET TIME: 1:42 PM EAT (13:42:00) ---
-    const TARGET_HOUR = 0;      
-    const TARGET_MINUTE = 4;     
+    const TARGET_HOUR = 10;      
+    const TARGET_MINUTE = 44;     
     const TARGET_SECOND = 0;     
 
     // LATENCY ADJUSTMENT (To account for 1-4ms execution time)
-    const LATENCY_OFFSET_MS = 50; 
+    const LATENCY_OFFSET_MS = 50;
+    
+    // ⭐ NEW: OK BUTTON CLICK TIMING (Click OK button X seconds BEFORE target time)
+    const OK_BUTTON_OFFSET_SECONDS = 5; // Click OK at 9:04:55 (5 seconds before 9:05:00)
     
     // Calculate the absolute target time object
     const now = new Date();
@@ -23,8 +26,8 @@ import fs from 'fs/promises';
     const TARGET_BID_TIME_MS = targetDate.getTime() - LATENCY_OFFSET_MS; 
     
     // Time Thresholds (in milliseconds)
-    const RELOAD_THRESHOLD_MS = 6 * 60 * 1000; 
-    const FINAL_RUN_THRESHOLD_MS = 6 * 1000;  
+    const RELOAD_THRESHOLD_MS = 6 * 60 * 1000;  // Start frequent reloads at 6 minutes before
+    const FINAL_RUN_THRESHOLD_MS = 5 * 60 * 1000;  // Start final execution at 5 minutes before
     const RELOAD_PAUSE_MS = 30000;            
     const SHORT_PAUSE_MS = 1000;              
 
@@ -257,9 +260,31 @@ import fs from 'fs/promises';
             return false;
         }
 
-        // 7. Click the OK button
-        console.log('✅ Clicking "OK" button...');
+        // ⭐ NEW: WAIT UNTIL PRECISE TIME BEFORE CLICKING OK BUTTON
+        const okButtonClickTime = TARGET_BID_TIME_MS - (OK_BUTTON_OFFSET_SECONDS * 1000);
+        const waitTimeForOkClick = okButtonClickTime - Date.now();
+       
+        if (waitTimeForOkClick > 0) {
+            const clickTimeDate = new Date(okButtonClickTime);
+            console.log(`\n⏰ OK button found! Now waiting to click at: ${clickTimeDate.toLocaleTimeString()}.${clickTimeDate.getMilliseconds()}`);
+            console.log(`⏳ Waiting ${(waitTimeForOkClick / 1000).toFixed(2)} seconds until OK button click...`);
+            await new Promise(resolve => setTimeout(resolve, waitTimeForOkClick));
+        } else {
+            console.log('⚠️ Warning: Already past OK button click time! Clicking immediately...');
+        }
+
+        // 7. Click the OK button AT THE PRECISE TIME
+        console.log('✅ Clicking "OK" button NOW!');
         await page.evaluate(btn => btn.click(), okBtn);
+        // Capture the millisecond timestamp IMMEDIATELY before the click
+        const clickTimestamp = Date.now();
+         console.log(
+             '✅ Clicking "OK" button NOW! AT: ' + 
+             new Date(clickTimestamp).toLocaleTimeString('en-US', { hour12: false }) + 
+             '.' + 
+             new Date(clickTimestamp).getMilliseconds() +
+            ' EAT'
+         );
 
         console.log('🎉 Done handling popup.');
                 // 5. Wait for 30 seconds
@@ -278,9 +303,14 @@ import fs from 'fs/promises';
     // -----------------------------------------------------------------
     
     console.log(`\n⏳ Target Bid Time (Adjusted for latency): ${new Date(TARGET_BID_TIME_MS).toLocaleTimeString()} (${TARGET_BID_TIME_MS})`);
+    console.log(`⏰ OK Button will be clicked at: ${new Date(TARGET_BID_TIME_MS - (OK_BUTTON_OFFSET_SECONDS * 1000)).toLocaleTimeString()} (${OK_BUTTON_OFFSET_SECONDS} seconds before target)`);
     
     let timeRemainingMs = TARGET_BID_TIME_MS - Date.now();
     let initialMapDone = false;
+
+    console.log("remaining time")
+    console.log(timeRemainingMs);
+    console.log(FINAL_RUN_THRESHOLD_MS);
     
     while (timeRemainingMs > FINAL_RUN_THRESHOLD_MS) {
         
@@ -313,17 +343,12 @@ import fs from 'fs/promises';
     }
     
    // -----------------------------------------------------------------
-    // ⚡️ FINAL EXECUTION (Less than 6 seconds remaining)
+    // ⚡️ FINAL EXECUTION - START IMMEDIATELY
     // -----------------------------------------------------------------
     
-    const finalWaitTime = Math.max(0, TARGET_BID_TIME_MS - Date.now()); 
+    console.log(`[${new Date().toLocaleTimeString()}] ⚡️ Starting final execution sequence NOW!`);
     
-    if (finalWaitTime > 0) {
-        console.log(`[${new Date().toLocaleTimeString()}] ⚡️ FINAL WAIT: Waiting ${finalWaitTime}ms for precise execution...`);
-        await new Promise(resolve => setTimeout(resolve, finalWaitTime));
-    }
-    
-    // Execute the final bid sequence
+    // Execute the final bid sequence immediately
     await mapButtonsAndExecute(true);
 
     // -----------------------------------------------------------------
