@@ -202,7 +202,69 @@ import fs from 'fs/promises';
         // Reverted to 10s timeout
         await page.waitForSelector('input[name="bidVal"]'); 
         // console.log('✍️ Filling Bid...');
-        await page.type('input[title="ID"]', '1000000000000');
+        await page.type('input[name="bidVal"]', '1000000000000');
+
+                // 3. Find and click the second "Submit" button
+        console.log('🔍 Looking for final Submit button...');
+        const alButtons = await page.$$('button');
+        let submitBtnFinal = null;
+
+        for (const btn of alButtons) {
+            const text = await page.evaluate(el => el.textContent.trim(), btn);
+            console.log(`[Examining Button]: "${text}"`);
+            
+            if (text === "Submit") {
+                submitBtnFinal = btn;
+                console.log('    -> ✅ MATCH: This is the final "Submit" button.');
+                break;
+            }
+        }
+
+        if (!submitBtnFinal) {
+            console.error('❌ Could not find final "Submit" button.');
+            return false;
+        }
+
+                
+        // 4. Click the final Submit button
+        console.log('✅ Clicking final Submit button...');
+        await page.evaluate(btn => btn.click(), submitBtnFinal);
+
+        // 5. Wait for 30 seconds
+        console.log('⏳ Waiting for 30 seconds...');
+        await new Promise(resolve => setTimeout(resolve, 30000));
+
+        console.log('✅ Done!');
+
+                // 6. Look for the OK button in the popup
+        const okButtons = await page.$$('button');
+        let okBtn = null;
+
+        for (const btn of okButtons) {
+            const text = await page.evaluate(el => el.textContent.trim(), btn);
+            console.log(`[Examining Button]: "${text}"`);
+            
+            if (text === "OK") {
+                okBtn = btn;
+                console.log('    -> ✅ MATCH: Found "OK" button.');
+                break;
+            }
+        }
+
+                
+        if (!okBtn) {
+            console.error('❌ Could not find "OK" button.');
+            return false;
+        }
+
+        // 7. Click the OK button
+        console.log('✅ Clicking "OK" button...');
+        await page.evaluate(btn => btn.click(), okBtn);
+
+        console.log('🎉 Done handling popup.');
+                // 5. Wait for 30 seconds
+        console.log('⏳ Waiting for 30 seconds...');
+        await new Promise(resolve => setTimeout(resolve, 30000));
 
         
     }
