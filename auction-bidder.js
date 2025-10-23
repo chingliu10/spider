@@ -18,8 +18,8 @@ import fs from 'fs/promises';
     const BID_VALUE = process.env.BID_AMOUNT || '1000000000000'; // Default 1 Trillion
     
     // --- TARGET TIME: 10:44 AM EAT (10:44:00) ---
-    const TARGET_HOUR = 10;      
-    const TARGET_MINUTE = 44;    
+    const TARGET_HOUR = 15;      
+    const TARGET_MINUTE = 0;    
     const TARGET_SECOND = 0;     
 
     // LATENCY ADJUSTMENT (To account for 1-4ms execution time)
@@ -108,8 +108,8 @@ import fs from 'fs/promises';
         await page.waitForSelector('input[title="ID"]', { timeout: 10000 });
 
         //const userID = '168733283';
-        const userID = '111079994';
-        const password = 'Apechealolo@12';
+        const userID = '142936062';
+        const password = 'Happy@2025';
         console.log(`[Instance ${INSTANCE_ID}] ✍️ Filling credentials...`);
         await page.type('input[title="ID"]', userID);
         await page.type('input[type="password"]', password);

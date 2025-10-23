@@ -7,9 +7,10 @@
 import { spawn } from 'child_process';
 
 const instances = [
-    { id: 1, okButtonOffset: 5, bidAmount: '21111111', description: '1 Trillion @ 5s' },
-    { id: 2, okButtonOffset: 4, bidAmount: '21111111', description: '500 Billion @ 4s' },
-    { id: 3, okButtonOffset: 3, bidAmount: '21111111', description: '100 Billion @ 3s' },
+    { id: 1, okButtonOffset: 3, bidAmount: '55000000', description: '1 Trillion @ 5s' },
+    { id: 2, okButtonOffset: 2, bidAmount: '55000000', description: '500 Billion @ 4s' },
+    { id: 3, okButtonOffset: 1, bidAmount: '55000000', description: '100 Billion @ 3s' },
+    { id: 3, okButtonOffset: 1, bidAmount: '55000000', description: '100 Billion @ 3s' },
 ];
 
 console.log('🚀 Starting Multi-Instance Auction Bidder\n');
