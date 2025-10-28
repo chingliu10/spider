@@ -1,80 +1,91 @@
 // ============================================
-// FILE 2: launch-multiple.js (Launcher script)
+// FILE: launch-multiple.js (Smart Sequential Launcher)
 // ============================================
 
 import { spawn } from 'child_process';
 
-// ⭐ --- ADD A STAGGERED LAUNCH DELAY ---
-// This is the delay BETWEEN launching each instance (in milliseconds)
-// to allow the previous instance to get through the login page.
-const LAUNCH_DELAY_MS = 15000; // 15 seconds
+const LAUNCH_DELAY_MS = 20000; // time between launches
+const MAX_WAIT_BEFORE_NEXT = 30000; // 30s grace to let it initialize fully
 
-// ⭐ --- ADD 'productIndex' TO EACH INSTANCE ---
-// productIndex: 0 = first "Place Bid" button
-// productIndex: 1 = second "Place Bid" button
 const instances = [
-//  { id: 1, productIndex: 0, okButtonOffset: 5, bidAmount: '22000000', description: 'Product [0] @ 3s' },
- { id: 2, productIndex: 0, okButtonOffset: 4, bidAmount: '22000000', description: 'Product [1] @ 2s' },
-  { id: 3, productIndex: 0, okButtonOffset: 3, bidAmount: '22000000', description: 'Product [0] @ 3s' },
- { id: 4, productIndex: 0, okButtonOffset: 1, bidAmount: '22000000', description: 'Product [1] @ 2s' },
-  { id: 5, productIndex: 0, okButtonOffset: 2, bidAmount: '22000000', description: 'Product [0] @ 3s' },
-  //  { id: 8, productIndex: 1, okButtonOffset: 5, bidAmount: '45000000', description: 'Product [1] @ 2s' },
-  { id: 7, productIndex: 1, okButtonOffset: 4, bidAmount: '45000000', description: 'Product [0] @ 3s' },
-  { id: 9, productIndex: 1, okButtonOffset: 3, bidAmount: '45000000', description: 'Product [0] @ 3s' },
- { id: 10, productIndex: 1, okButtonOffset: 1, bidAmount: '45000000', description: 'Product [1] @ 2s' },
- { id: 11, productIndex: 1, okButtonOffset: 2, bidAmount: '44500000', description: 'Product [1] @ 2s' },
-//  { id: 12, productIndex: 2, okButtonOffset: 5, bidAmount: '73000000', description: 'Product [0] @ 3s' },
- { id: 13, productIndex: 2, okButtonOffset: 4, bidAmount: '73000000', description: 'Product [1] @ 2s' },
-  { id: 14, productIndex: 2, okButtonOffset: 3, bidAmount: '72500000', description: 'Product [0] @ 3s' },
- { id: 15, productIndex: 2, okButtonOffset: 1, bidAmount: '73000000', description: 'Product [1] @ 2s' },
- { id: 16, productIndex: 2, okButtonOffset: 2, bidAmount: '73000000', description: 'Product [1] @ 2s' },
+  { id: 1, productIndex: 0, okButtonOffset: 1, bidAmount: '305705.4', description: 'Product [0] @ 5s' },
+  { id: 2, productIndex: 0, okButtonOffset: 1, bidAmount: '305705.4', description: 'Product [0] @ 4s' },
+  { id: 3, productIndex: 0, okButtonOffset: 0, bidAmount: '305705.4', description: 'Product [0] @ 4s' },
+    { id: 4, productIndex: 1, okButtonOffset: 1, bidAmount: '8863202.7', description: 'Product [0] @ 5s' },
+  { id: 5, productIndex: 1, okButtonOffset: 1, bidAmount: '8863202.7', description: 'Product [0] @ 4s' },
+  { id: 6, productIndex: 1, okButtonOffset: 0, bidAmount: '8863202.7', description: 'Product [0] @ 4s' },
+    { id: 7, productIndex: 2, okButtonOffset: 1, bidAmount: '15901333.8', description: 'Product [0] @ 5s' },
+  { id: 8, productIndex: 2, okButtonOffset: 1, bidAmount: '15901333.8', description: 'Product [0] @ 4s' },
+  { id: 9, productIndex: 2, okButtonOffset: 0, bidAmount: '15901333.8', description: 'Product [0] @ 4s' },
+  // { id: 7, productIndex: 1, okButtonOffset: 2, bidAmount: '89861911.70', description: 'Product [0] @ 4s' },
+  //    { id: 8, productIndex: 0, okButtonOffset: 2, bidAmount: '12464672', description: 'Product [0] @ 5s' },
+  //  { id: 9, productIndex: 0, okButtonOffset: 2, bidAmount: '12464672', description: 'Product [0] @ 4s' },
+  //  { id: 9, productIndex: 0, okButtonOffset: 3, bidAmount: '12464672', description: 'Product [0] @ 4s' },
+  // add more...
 ];
 
-// Helper delay function
-const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+const delay = (ms) => new Promise((res) => setTimeout(res, ms));
 
-// ⭐ --- CREATE AN ASYNC LAUNCHER FUNCTION ---
-const launchInstancesSequentially = async () => {
-    console.log('🚀 Starting Multi-Instance Auction Bidder (Sequential Launch)');
-    console.log('='.repeat(60));
-    console.log(`⏳ Launch delay between instances: ${LAUNCH_DELAY_MS / 1000} seconds\n`);
+async function launchInstance(instance) {
+  return new Promise((resolve) => {
+    console.log(`\n📍 Launching Instance ${instance.id}: ${instance.description}`);
 
-    // Use a 'for...of' loop to support 'await'
-    for (const instance of instances) {
-        console.log(`\n📍 Launching Instance ${instance.id}: ${instance.description}`);
-        console.log(`   Product Index: ${instance.productIndex}`);
-        console.log(`   OK Button Offset: ${instance.okButtonOffset} seconds`);
-        console.log(`   Bid Amount: ${instance.bidAmount}`);
-        
-        const child = spawn('node', ['auction-bidder.js'], {
-            env: {
-                ...process.env,
-                INSTANCE_ID: instance.id,
-                OK_BUTTON_OFFSET_SECONDS: instance.okButtonOffset,
-                BID_AMOUNT: instance.bidAmount,
-                // ⭐ --- PASS THE NEW INDEX ---
-                PRODUCT_INDEX: instance.productIndex 
-            },
-            stdio: 'inherit',
-            shell: true
-        });
-        
-        child.on('error', (error) => {
-            console.error(`❌ Instance ${instance.id} error:`, error);
-        });
-        
-        child.on('close', (code) => {
-            console.log(`\n✅ Instance ${instance.id} finished with code ${code}`);
-        });
+    const child = spawn('node', ['auction-bidder.js'], {
+      env: {
+        ...process.env,
+        INSTANCE_ID: instance.id,
+        OK_BUTTON_OFFSET_SECONDS: instance.okButtonOffset,
+        BID_AMOUNT: instance.bidAmount,
+        PRODUCT_INDEX: instance.productIndex,
+      },
+      stdio: 'inherit',
+      shell: true,
+    });
 
-        // ⭐ --- WAIT before launching the next one ---
-        console.log(`\n... Waiting ${LAUNCH_DELAY_MS / 1000}s before next launch ...`);
-        await delay(LAUNCH_DELAY_MS);
-    }
+    let exited = false;
 
-    console.log('\n' + '='.repeat(60));
-    console.log('✅ All instances launched!\n');
-};
+    child.on('close', (code) => {
+      exited = true;
+      if (code === 0) {
+        console.log(`✅ Instance ${instance.id} completed successfully`);
+        resolve('done');
+      } else {
+        console.warn(`⚠️ Instance ${instance.id} exited with code ${code}, retrying...`);
+        setTimeout(() => resolve('retry'), 10000);
+      }
+    });
 
-// Start the sequential launcher
-launchInstancesSequentially();
+    child.on('error', (err) => {
+      console.error(`❌ Failed to start instance ${instance.id}:`, err);
+      setTimeout(() => resolve('retry'), 10000);
+    });
+
+    // Don’t block launcher if process stays alive for too long (idle waiting)
+    setTimeout(() => {
+      if (!exited) {
+        console.log(`⏩ Instance ${instance.id} still running (OK wait). Launching next...`);
+        resolve('continue');
+      }
+    }, MAX_WAIT_BEFORE_NEXT);
+  });
+}
+
+async function launchSequentially() {
+  console.log('🚀 Starting Multi-Instance Auction Bidder');
+  console.log('='.repeat(60));
+  console.log(`⏳ Delay between launches: ${LAUNCH_DELAY_MS / 1000}s`);
+  console.log(`📊 Total instances: ${instances.length}\n`);
+
+  for (const instance of instances) {
+    while (true) {
+      const result = await launchInstance(instance);
+      if (result === 'done' || result === 'continue') break; // proceed
+    }
+    console.log(`\n... Waiting ${LAUNCH_DELAY_MS / 1000}s before next launch ...`);
+    await delay(LAUNCH_DELAY_MS);
+  }
+
+  console.log('\n✅ All instances started successfully!');
+}
+
+launchSequentially();
